@@ -1,56 +1,52 @@
 import streamlit as st
 import pandas as pd
 
-
+# Função para carregar a planilha
 def carregar_planilha():
-    uploaded_file = st.file_uploader("Escolha a planilha de auditoria", type="xlsx")
+    uploaded_file = st.file_uploader("Escolha uma planilha Excel", type=["xlsx", "xls"])
     if uploaded_file is not None:
         df = pd.read_excel(uploaded_file, engine='openpyxl')
         return df
     return None
 
-# Função para criar o relatório a partir do texto base
+# Função para criar o relatório com base no texto
 def gerar_relatorio(df, texto_base):
-    # Substitui as "tags" pelo conteúdo da planilha
-    for col in df.columns:
-        texto_base = texto_base.replace(f"[{col.upper()}]", str(df[col].iloc[0]))  # Substitui pelo valor da primeira linha
+    # Substituir tags no texto base pelas colunas correspondentes
+    for coluna in df.columns:
+        tag = f"[{coluna.upper()}]"
+        if tag in texto_base:
+            texto_base = texto_base.replace(tag, str(df[coluna].iloc[0]))  # Substitui a tag pela primeira linha da coluna
     return texto_base
 
-# Função para gerar a planilha final com os relatórios
-def gerar_planilha_com_relatorio(df, texto_base):
-    relatorios = []
-    for index, row in df.iterrows():
-        texto_relatorio = texto_base
-        for col in df.columns:
-            texto_relatorio = texto_relatorio.replace(f"[{col.upper()}]", str(row[col]))  # Substitui pela linha atual
-        relatorios.append(texto_relatorio)
+# Função principal do Streamlit
+def app():
+    st.title('Gerador de Relatório Processual')
+
+    # Carregar a planilha
+    df = carregar_planilha()
+    if df is not None:
+        st.write("Planilha carregada com sucesso!")
+        st.write("Colunas encontradas na planilha:")
+        st.write(df.columns.tolist())
+
+        # Entrar com o texto base
+        texto_base = st.text_area("Insira o texto base do relatório", 
+                                  "Trata-se de [TIPO DE AÇÃO] ajuizada por [AUTOR] contra [RÉU]...")
+
+        # Exibir as colunas como tags
+        colunas_selecionadas = []
+        for coluna in df.columns:
+            if st.checkbox(f"Adicionar {coluna} ao texto", value=True):
+                colunas_selecionadas.append(coluna)
+
+        if st.button("Gerar Relatório"):
+            if colunas_selecionadas:
+                # Substituir as tags pelas colunas selecionadas
+                relatorio = gerar_relatorio(df[colunas_selecionadas], texto_base)
+                st.write("Relatório Gerado:")
+                st.write(relatorio)
+            else:
+                st.warning("Por favor, selecione pelo menos uma coluna.")
     
-    df['Relatório Final'] = relatorios  # Adiciona a coluna com o relatório final
-    return df
-
-# Carregar a planilha
-df = carregar_planilha()
-
-# Se a planilha for carregada com sucesso
-if df is not None:
-    st.write("Dados da Planilha:", df.head())
-
-    # Campo para inserir o texto base
-    texto_base = st.text_area("Insira o texto base para o relatório", "Trata-se de [TIPO DE AÇÃO] ajuizada por [AUTOR] contra [RÉU]...")
-
-    if texto_base:
-        st.write("Texto inserido:", texto_base)
-
-        # Gerar os relatórios
-        df_com_relatorios = gerar_planilha_com_relatorio(df, texto_base)
-
-        # Exibir a planilha com os relatórios
-        st.write("Planilha com os Relatórios:", df_com_relatorios)
-
-        # Baixar a planilha com os relatórios
-        st.download_button(
-            label="Baixar Planilha com Relatórios",
-            data=df_com_relatorios.to_excel(index=False, engine='openpyxl'),
-            file_name="relatorios_completos.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
+if __name__ == "__main__":
+    app()

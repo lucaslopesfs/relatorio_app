@@ -18,7 +18,7 @@ def gerar_relatorio(df, texto_base):
     for index, row in df.iterrows():
         texto = texto_base
         for coluna in df.columns:
-            tag = f"[{coluna.upper()}]"
+            tag = f"[{coluna.upper()}]"  # A tag é convertida para maiúsculo
             if tag in texto:
                 texto = texto.replace(tag, str(row[coluna]))  # Substitui a tag pelo valor correspondente da linha
         relatórios.append(texto)

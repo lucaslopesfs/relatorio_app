@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+from io import BytesIO
 
 # Função para carregar a planilha
 def carregar_planilha():
@@ -26,6 +27,14 @@ def gerar_relatorio(df, texto_base):
     # Adiciona os relatórios ao DataFrame como uma nova coluna
     df['Relatório Final'] = relatórios
     return df
+
+# Função para salvar a planilha com relatórios como um arquivo de bytes para download
+def salvar_planilha(df):
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False)
+    processed_data = output.getvalue()
+    return processed_data
 
 # Função principal do Streamlit
 def app():
@@ -86,10 +95,10 @@ def app():
                 st.write(df_com_relatorio[['Relatório Final']].head())
 
                 # Permitir o download da planilha com os relatórios e dados originais
-                arquivo_saida = df_com_relatorio.to_excel(index=False)
+                planilha_final = salvar_planilha(df_com_relatorio)
                 st.download_button(
                     label="Baixar Planilha com Relatórios e Dados Originais",
-                    data=arquivo_saida,
+                    data=planilha_final,
                     file_name="relatorios_gerados_com_dados.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
@@ -101,3 +110,4 @@ def app():
     
 if __name__ == "__main__":
     app()
+

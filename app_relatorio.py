@@ -11,12 +11,21 @@ def carregar_planilha():
 
 # Função para criar o relatório com base no texto
 def gerar_relatorio(df, texto_base):
-    # Substituir tags no texto base pelas colunas correspondentes
-    for coluna in df.columns:
-        tag = f"[{coluna.upper()}]"
-        if tag in texto_base:
-            texto_base = texto_base.replace(tag, str(df[coluna].iloc[0]))  # Substitui a tag pela primeira linha da coluna
-    return texto_base
+    # Cria uma lista para armazenar os relatórios gerados
+    relatórios = []
+    
+    # Iterar sobre cada linha da planilha e gerar o relatório
+    for index, row in df.iterrows():
+        texto = texto_base
+        for coluna in df.columns:
+            tag = f"[{coluna.upper()}]"
+            if tag in texto:
+                texto = texto.replace(tag, str(row[coluna]))  # Substitui a tag pelo valor correspondente da linha
+        relatórios.append(texto)
+    
+    # Adiciona os relatórios ao DataFrame como uma nova coluna
+    df['Relatório Final'] = relatórios
+    return df
 
 # Função principal do Streamlit
 def app():
@@ -41,10 +50,20 @@ def app():
 
         if st.button("Gerar Relatório"):
             if colunas_selecionadas:
-                # Substituir as tags pelas colunas selecionadas
-                relatorio = gerar_relatorio(df[colunas_selecionadas], texto_base)
-                st.write("Relatório Gerado:")
-                st.write(relatorio)
+                # Gerar os relatórios para todas as linhas
+                df_com_relatorio = gerar_relatorio(df[colunas_selecionadas], texto_base)
+                
+                st.write("Relatório Gerado com sucesso!")
+                st.write(df_com_relatorio[['Relatório Final']])
+
+                # Permitir o download da planilha com os relatórios
+                arquivo_saida = df_com_relatorio.to_excel(index=False)
+                st.download_button(
+                    label="Baixar Planilha com Relatórios",
+                    data=arquivo_saida,
+                    file_name="relatorios_gerados.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                )
             else:
                 st.warning("Por favor, selecione pelo menos uma coluna.")
     

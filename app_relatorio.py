@@ -1,5 +1,7 @@
+pip install openpyxl
 import streamlit as st
 import pandas as pd
+
 
 def carregar_planilha():
     uploaded_file = st.file_uploader("Escolha a planilha de auditoria", type="xlsx")

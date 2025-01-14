@@ -33,20 +33,31 @@ def app():
     st.set_page_config(page_title="Gerador de Relatório Processual", page_icon="📑")
     st.title("Gerador de Relatório Processual 📑")
     
-    # Instruções para o usuário
+    # Introdução detalhada
     st.markdown("""
-    Bem-vindo ao **Gerador de Relatório Processual**. 
-    Este aplicativo permite criar relatórios processuais automaticamente a partir de uma planilha de auditoria. 
-    Basta fazer o upload da planilha, preencher o texto base e gerar o relatório final.
-    """)
+    **Bem-vindo ao Gerador de Relatório Processual!** 📝
     
+    Este aplicativo foi criado para gerar relatórios processuais de maneira automática a partir de uma planilha de auditoria. Você só precisa fazer o upload da sua planilha, preencher o texto base do relatório e gerar o relatório final.
+    
+    ### Como usar:
+    1. **Faça o upload da sua planilha Excel.** A planilha deve conter dados que você deseja incluir no relatório (como informações sobre processos, partes envolvidas, etc.).
+    2. **Preencha o texto base do relatório.** Use as tags, como [TIPO DE AÇÃO], para indicar onde você quer que as informações da planilha sejam inseridas.
+    3. **Selecione as colunas da planilha.** Escolha as colunas da sua planilha que você deseja incluir nas tags.
+    4. **Gere o relatório.** Clique no botão "Gerar Relatório" para ver a pré-visualização do relatório gerado e, em seguida, baixe a planilha com os dados originais e o relatório gerado.
+    
+    ### Exemplo de Tags:
+    - [TIPO DE AÇÃO]: será substituído pela coluna "TIPO DE AÇÃO" da sua planilha.
+    - [AUTOR]: será substituído pela coluna "AUTOR" da sua planilha.
+    """)
+
     # Carregar a planilha
     df = carregar_planilha()
     if df is not None:
         st.success("Planilha carregada com sucesso!")
 
-        # Exibir as colunas da planilha
+        # Exibir as colunas da planilha em uma caixa rolável
         st.subheader("Colunas encontradas na planilha:")
+        st.text("Essas são as colunas que você pode utilizar nas tags do seu relatório.")
         st.write(df.columns.tolist())
 
         # Entrada do texto base
@@ -55,9 +66,9 @@ def app():
             "Trata-se de [TIPO DE AÇÃO] ajuizada por [AUTOR] contra [RÉU]..."
         )
 
-        # Exibir as colunas como tags
-        colunas_selecionadas = []
+        # Exibição de colunas para seleção
         st.subheader("Selecione as colunas para incluir nas tags:")
+        colunas_selecionadas = []
         for coluna in df.columns:
             if st.checkbox(f"Adicionar {coluna} ao texto", value=True):
                 colunas_selecionadas.append(coluna)
@@ -74,12 +85,12 @@ def app():
                 st.subheader("Pré-visualização do Relatório Final:")
                 st.write(df_com_relatorio[['Relatório Final']].head())
 
-                # Permitir o download da planilha com os relatórios
+                # Permitir o download da planilha com os relatórios e dados originais
                 arquivo_saida = df_com_relatorio.to_excel(index=False)
                 st.download_button(
                     label="Baixar Planilha com Relatórios e Dados Originais",
                     data=arquivo_saida,
-                    file_name="relatorios_gerados.xlsx",
+                    file_name="relatorios_gerados_com_dados.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
             else:
